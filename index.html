@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ساخت کارنامه</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --navy:#122a47; --gold:#d4a24c; --gold-2:#e8c778;
+  --line:#d9d2c0;
+  --c-mafahim:#16324f; --c-tamrin:#2f8f5f; --c-proje:#d9a63e; --c-mosharekat:#6b4c93; --c-pishraft:#d2603f;
+  --lvl-a:#c99a3f; --lvl-b:#5b7fa6; --lvl-c:#b8763e;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Vazirmatn',sans-serif;background:#e7e2d4;color:#1c2b3a;}
+.app{display:flex;gap:24px;padding:24px;max-width:1500px;margin:0 auto;align-items:flex-start;}
+.panel{flex:0 0 340px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;}
+.panel h2{font-size:15px;margin:0 0 14px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;}
+.gear{background:none;border:1px solid var(--line);border-radius:6px;font-size:12px;padding:3px 8px;cursor:pointer;font-family:inherit;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;color:#5a5a5a;margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:13px;background:#fdfcf9;}
+.field textarea{resize:vertical;min-height:50px;line-height:1.7;}
+.dateRow{display:flex;gap:6px;}
+.dateRow input{flex:1;}
+.dateRow button{flex:none;padding:0 10px;border:1px solid var(--line);background:#f4f1e9;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;}
+.skill-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.skill-row span{flex:0 0 90px;font-size:12px;}
+.skill-row select{flex:1;}
+.levelbtns{display:flex;gap:6px;}
+.levelbtns button{flex:1;padding:8px 0;border:2px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:700;}
+.levelbtns button.active[data-l="A"]{border-color:var(--lvl-a);background:#faf3e2;}
+.levelbtns button.active[data-l="B"]{border-color:var(--lvl-b);background:#eef3f8;}
+.levelbtns button.active[data-l="C"]{border-color:var(--lvl-c);background:#f8ede0;}
+.actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.actions button{flex:1 1 46%;padding:10px;border:none;border-radius:6px;font-family:inherit;font-weight:700;cursor:pointer;font-size:12.5px;}
+.btn-print{background:var(--navy);color:#fff;}
+.btn-pdf{background:#8a5a2b;color:#fff;}
+.btn-save{background:#eee;color:#1c2b3a;}
+hr.sep{border:none;border-top:1px solid var(--line);margin:14px 0;}
+.hint{font-size:11px;color:#8a8a8a;margin-top:3px;}
+.filebtn{display:block;width:100%;text-align:center;padding:9px;border:1px dashed var(--line);border-radius:6px;background:#f9f7f1;cursor:pointer;font-size:13px;margin-bottom:8px;}
+.filebtn input{display:none;}
+.tmplbtn{width:100%;padding:7px;border:1px solid var(--line);background:#fff;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;margin-bottom:10px;}
+.studlist{max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:6px;margin-bottom:10px;}
+.studlist .srow{display:flex;justify-content:space-between;align-items:center;padding:6px 9px;font-size:12.5px;border-bottom:1px solid var(--line);cursor:pointer;gap:6px;}
+.studlist .srow:last-child{border-bottom:none;}
+.studlist .srow.active{background:#f2ecd9;font-weight:700;}
+.studlist .srow .sname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.studlist .srow .sdl{flex:none;background:none;border:1px solid var(--line);border-radius:4px;font-size:11px;padding:2px 6px;cursor:pointer;font-family:inherit;}
+.navrow{display:flex;gap:6px;margin-bottom:10px;}
+.navrow button{flex:1;padding:7px;border:1px solid var(--line);background:#fff;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;}
+.batchactions{display:flex;gap:6px;margin-top:6px;}
+.batchactions button{flex:1;padding:10px;border:none;border-radius:6px;font-family:inherit;font-weight:700;cursor:pointer;font-size:12px;}
+.btn-batch{background:#3b5c86;color:#fff;}
+.btn-zip{background:#4d7a4d;color:#fff;}
+
+.overlay{position:fixed;inset:0;background:rgba(20,25,35,.45);display:none;align-items:center;justify-content:center;z-index:50;}
+.overlay.open{display:flex;}
+.drawer{background:#fff;border-radius:10px;padding:20px 22px;width:520px;max-height:85vh;overflow:auto;}
+.drawer h3{margin:0 0 4px;font-size:16px;color:var(--navy);}
+.drawer p.hint{margin:0 0 14px;}
+.tabs{display:flex;gap:6px;margin-bottom:14px;}
+.tabs button{flex:1;padding:7px 0;border:1px solid var(--line);background:#f7f5ef;border-radius:6px;font-family:inherit;font-weight:700;cursor:pointer;}
+.tabs button.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.drawer-actions{display:flex;gap:8px;margin-top:14px;}
+.drawer-actions button{flex:1;padding:9px;border:none;border-radius:6px;font-family:inherit;font-weight:700;cursor:pointer;}
+.dbtn-save{background:var(--navy);color:#fff;}
+.dbtn-close{background:#eee;}
+
+/* ---- CARD: fixed to A4 pixel size (794x1123 @96dpi = 210x297mm) so screen, print and PDF export always match one page ---- */
+.stage{flex:1;display:flex;justify-content:center;}
+.card{width:794px;height:1123px;background:#fff;border:1.5px solid var(--navy);border-radius:4px;
+      padding:30px 36px;position:relative;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;}
+.card::before{display:none;}
+.ribbon{position:absolute;top:0;right:0;width:50px;height:50px;}
+.head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.head h1{font-size:22px;margin:0;color:var(--navy);}
+.head .sub{font-size:12.5px;color:#555;margin-top:2px;}
+.inst{font-size:11.5px;color:var(--navy);font-weight:700;margin-top:4px;}
+.badge{width:90px;text-align:center;}
+.badge .shield{width:60px;height:60px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.2);}
+.badge .lvl{margin-top:4px;font-weight:700;font-size:11px;border-radius:4px;padding:2px 0;color:#fff;}
+.infobar{display:flex;gap:10px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;flex-wrap:wrap;}
+.infobar .it{flex:1;min-width:150px;display:flex;justify-content:space-between;border-left:1px solid var(--line);padding-left:10px;}
+.infobar .it:last-child{border-left:none;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.box{border:1px solid var(--line);border-radius:8px;padding:10px 13px;}
+.box h3{margin:0 0 7px;font-size:13px;color:var(--navy);border-bottom:1px solid var(--line);padding-bottom:5px;}
+.donutwrap{display:flex;align-items:center;gap:12px;}
+.donut{width:100px;height:100px;border-radius:50%;flex:none;position:relative;}
+.donut svg{position:absolute;inset:0;width:100%;height:100%;}
+.donut .inner{position:absolute;inset:0;margin:auto;width:60px;height:60px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;}
+.donut .inner b{font-size:17px;}
+.legend{font-size:10.5px;flex:1;}
+.legend .li{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.legend .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.bars .brow{margin-bottom:6px;}
+.bars .blabel{display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:2px;}
+.bars .btrack{height:8px;background:#eee;border-radius:5px;overflow:hidden;}
+.bars .bfill{height:100%;border-radius:5px;}
+.progresswrap svg{width:100%;height:120px;display:block;}
+.featlist,.gaplist{list-style:none;margin:0;padding:0;font-size:11px;}
+.featlist li,.gaplist li{display:flex;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line);}
+.featlist li:last-child,.gaplist li:last-child{border-bottom:none;}
+.featlist li::before{content:"●";color:var(--gold);flex:none;}
+.gaplist li::before{content:"◆";color:#b8763e;flex:none;}
+.notesbox{border:1px solid var(--line);border-radius:8px;padding:10px 13px;font-size:11.5px;line-height:1.7;margin-bottom:8px;flex:1;min-height:0;overflow:hidden;}
+.footer{font-size:10.5px;color:#666;border-top:1px solid var(--line);padding-top:8px;margin-top:auto;}
+.footline1{display:flex;justify-content:space-between;margin-bottom:5px;}
+.footline2{display:flex;justify-content:space-between;background:var(--navy);color:#fff;border-radius:5px;padding:5px 10px;font-size:10px;}
+
+#batchContainer{display:none;}
+.printpage{page-break-after:always;}
+.printpage:last-child{page-break-after:auto;}
+
+/* ---- fixed A4 template used off-screen for PDF export (html2canvas) ---- */
+.pdfcard{width:190mm;height:277mm;padding:10px 16px;border:1.2px solid var(--navy);border-radius:6px;position:relative;display:flex;flex-direction:column;overflow:hidden;background:#fff;}
+.pdfcard::before{content:"";position:absolute;top:0;right:0;width:44px;height:44px;background:linear-gradient(135deg,var(--gold-2),var(--gold));clip-path:polygon(0 0,100% 0,100% 100%);}
+.pdfcard .head{margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;}
+.pdfcard .head h1{font-size:19px;margin:0;color:var(--navy);}
+.pdfcard .head .sub{font-size:11px;color:#555;margin-top:2px;}
+.pdfcard .inst{font-size:11px;color:var(--navy);font-weight:700;margin-top:2px;}
+.pdfcard .badge{width:80px;text-align:center;}
+.pdfcard .badge .shield{width:52px;height:52px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;}
+.pdfcard .badge .lvl{margin-top:3px;font-weight:700;font-size:10px;border-radius:4px;padding:2px 0;color:#fff;}
+.pdfcard .infobar{display:flex;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:10.5px;flex-wrap:wrap;}
+.pdfcard .infobar .it{flex:1;min-width:120px;display:flex;justify-content:space-between;border-left:1px solid var(--line);padding-left:10px;}
+.pdfcard .infobar .it:last-child{border-left:none;}
+.pdfcard .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.pdfcard .box{border:1px solid var(--line);border-radius:8px;padding:7px 10px;}
+.pdfcard .box h3{margin:0 0 6px;font-size:11.5px;color:var(--navy);border-bottom:1px solid var(--line);padding-bottom:4px;}
+.pdfcard .donutwrap{display:flex;align-items:center;gap:10px;}
+.pdfcard .donut{width:88px;height:88px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;}
+.pdfcard .donut .inner{width:54px;height:54px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;}
+.pdfcard .donut .inner b{font-size:15px;}
+.pdfcard .legend{font-size:9.5px;flex:1;}
+.pdfcard .legend .li{display:flex;align-items:center;gap:5px;margin-bottom:2px;}
+.pdfcard .legend .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.pdfcard .bars .brow{margin-bottom:5px;}
+.pdfcard .bars .blabel{display:flex;justify-content:space-between;font-size:9.5px;margin-bottom:2px;}
+.pdfcard .bars .btrack{height:7px;background:#eee;border-radius:4px;overflow:hidden;}
+.pdfcard .bars .bfill{height:100%;border-radius:4px;}
+.pdfcard .featlist,.pdfcard .gaplist{list-style:none;margin:0;padding:0;font-size:10px;}
+.pdfcard .featlist li,.pdfcard .gaplist li{display:flex;gap:6px;padding:3px 0;border-bottom:1px dashed var(--line);}
+.pdfcard .featlist li::before{content:"●";color:var(--gold);flex:none;}
+.pdfcard .gaplist li::before{content:"◆";color:#b8763e;flex:none;}
+.pdfcard .progresswrap svg{width:100%;height:88px;}
+.pdfcard .notesbox{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:10.5px;line-height:1.6;margin-bottom:6px;}
+.pdfcard .footer{display:flex;justify-content:space-between;align-items:center;font-size:9.5px;color:#666;border-top:1px solid var(--line);padding-top:6px;margin-top:auto;}
+
+@page{ size:A4; margin:0; }
+@media print{
+  body{background:#fff;}
+  .panel,.stage{padding:0;}
+  .app{padding:0;display:block;}
+  .panel,.overlay{display:none !important;}
+  .card{margin:0;border-radius:0;}
+  body.batch-print .stage{display:none !important;}
+  body.batch-print #batchContainer{display:block !important;}
+  body:not(.batch-print) #batchContainer{display:none !important;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel" id="panel">
+    <h2>اطلاعات کارنامه <button class="gear" id="openSettings">⚙ پیش‌فرض سطح‌ها</button></h2>
+
+    <label class="filebtn" for="excelFile">📄 وارد کردن اطلاعات از اکسل<input type="file" id="excelFile" accept=".xlsx,.xls,.csv"></label>
+    <button class="tmplbtn" id="tmplBtn">دانلود قالب نمونه اکسل</button>
+    <div id="studWrap" style="display:none;">
+      <div class="studlist" id="studList"></div>
+      <div class="navrow"><button id="prevStud">‹ قبلی</button><button id="nextStud">بعدی ›</button></div>
+      <div class="batchactions">
+        <button class="btn-batch" id="batchPrint">چاپ همه</button>
+        <button class="btn-zip" id="zipBtn">دانلود همه (ZIP)</button>
+      </div>
+    </div>
+    <hr class="sep">
+
+    <div class="field"><label>نام دانشجو</label><input id="f_name" placeholder="نام و نام خانوادگی"></div>
+    <div class="field"><label>نام دوره</label><input id="f_course" value="کلاس‌های برنامه‌نویسی پایتون"></div>
+    <div class="field"><label>نام مدرس</label><input id="f_teacher" value="رضا ایوبی"></div>
+    <div class="field"><label>نام مرکز آموزشی</label><input id="f_inst" value="مرکز آموزشی خوارزمی"></div>
+    <div class="field"><label>شماره تماس آموزشگاه</label><input id="f_phone" value="09387405653 - 02832562070"></div>
+    <div class="field"><label>مدیریت</label><input id="f_manager" value="مهندس ساجدی"></div>
+    <div class="field"><label>آدرس شعبه اصلی</label><input id="f_address" value="محمدیه، بلوار مطهری، نبش یاس ۶"></div>
+    <div class="field"><label>تاریخ گزارش</label>
+      <div class="dateRow"><input id="f_date" placeholder="۱۴۰۴/۰۷/۲۸"><button type="button" id="todayBtn">امروز</button></div>
+      <div class="hint">تاریخ شمسی — با دکمه «امروز» به‌صورت خودکار پر می‌شود.</div>
+    </div>
+
+    <label style="display:block;font-size:12px;color:#5a5a5a;margin-bottom:6px;">سطح کلی</label>
+    <div class="levelbtns">
+      <button data-l="A" class="active">A</button>
+      <button data-l="B">B</button>
+      <button data-l="C">C</button>
+    </div>
+    <hr class="sep">
+    <h2>مهارت‌های ارزیابی‌شده</h2>
+    <div class="skill-row"><span>درک مفاهیم</span><select data-sk="mafahim"><option>عالی</option><option>خوب</option><option>متوسط</option><option>ضعیف</option></select></div>
+    <div class="skill-row"><span>تمرین و حل مسئله</span><select data-sk="tamrin"><option>عالی</option><option>خوب</option><option>متوسط</option><option>ضعیف</option></select></div>
+    <div class="skill-row"><span>پروژه و عملی</span><select data-sk="proje"><option>عالی</option><option>خوب</option><option>متوسط</option><option>ضعیف</option></select></div>
+    <div class="skill-row"><span>مشارکت کلاسی</span><select data-sk="mosharekat"><option>خوب</option><option>عالی</option><option>متوسط</option><option>ضعیف</option></select></div>
+    <div class="skill-row"><span>پیشرفت کلی</span><select data-sk="pishraft"><option>عالی</option><option>خوب</option><option>متوسط</option><option>ضعیف</option></select></div>
+    <hr class="sep">
+    <div class="field"><label>روند پیشرفت (۱ تا ۴ برای هر جلسه، جدا با ویرگول)</label><input id="f_progress" value="2,2,3,3,3,4,4,4"></div>
+    <hr class="sep">
+    <div class="field"><label>ویژگی‌های این سطح (هر خط یک مورد)</label><textarea id="f_features" style="min-height:90px;"></textarea></div>
+    <div class="field"><label>بخش‌هایی که نیاز به کار بیشتری دارند (هر خط یک مورد)</label><textarea id="f_gaps" style="min-height:70px;"></textarea></div>
+    <div class="field"><label>توضیحات مدرس</label><textarea id="f_notes"></textarea></div>
+    <div class="hint">این سه مورد به‌صورت پیش‌فرض بر اساس سطح انتخابی پر می‌شوند و برای هر دانشجو قابل ویرایش‌اند.</div>
+    <div class="actions">
+      <button class="btn-print" onclick="window.print()">چاپ این کارنامه</button>
+      <button class="btn-pdf" id="pdfBtn">دانلود PDF این کارنامه</button>
+      <button class="btn-save" id="saveBtn">ذخیره پیش‌نویس</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="card" id="card"></div>
+  </div>
+  <div id="batchContainer"></div>
+</div>
+<div id="pdfHost" style="position:fixed;left:-10000px;top:0;"></div>
+
+<div class="overlay" id="overlay">
+  <div class="drawer">
+    <h3>پیش‌فرض‌های هر سطح</h3>
+    <p class="hint">برای هر سطح، متن‌هایی که هر بار به‌صورت خودکار در فرم پر می‌شوند را تنظیم کنید.</p>
+    <div class="tabs">
+      <button data-t="A" class="active">سطح A</button>
+      <button data-t="B">سطح B</button>
+      <button data-t="C">سطح C</button>
+    </div>
+    <div class="field"><label>توضیحات مدرس پیش‌فرض</label><textarea id="s_notes" style="min-height:70px;"></textarea></div>
+    <div class="field"><label>ویژگی‌های سطح (هر خط یک مورد)</label><textarea id="s_features" style="min-height:100px;"></textarea></div>
+    <div class="field"><label>بخش‌های نیازمند کار (هر خط یک مورد)</label><textarea id="s_gaps" style="min-height:80px;"></textarea></div>
+    <div class="drawer-actions">
+      <button class="dbtn-save" id="saveSettings">ذخیره پیش‌فرض‌ها</button>
+      <button class="dbtn-close" id="closeSettings">بستن</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SK_META = {
+  mafahim:{label:'درک مفاهیم',color:'var(--c-mafahim)'},
+  tamrin:{label:'تمرین و حل مسئله',color:'var(--c-tamrin)'},
+  proje:{label:'پروژه و عملی',color:'var(--c-proje)'},
+  mosharekat:{label:'مشارکت کلاسی',color:'var(--c-mosharekat)'},
+  pishraft:{label:'پیشرفت کلی',color:'var(--c-pishraft)'}
+};
+const LVL_MAP = {'عالی':4,'خوب':3,'متوسط':2,'ضعیف':1};
+const LVL_INFO = { A:{color:'#c99a3f',name:'A',stars:5}, B:{color:'#5b7fa6',name:'B',stars:4}, C:{color:'#b8763e',name:'C',stars:2} };
+const BASE_DEFAULTS = {
+  A:{ notes:'شما در این دوره عملکرد بسیار عالی داشته‌اید و در ادامه می‌توانید توانایی‌های خود را در برنامه‌نویسی پیشرفته‌تر کنید.',
+    features:['درک عمیق و کامل مفاهیم پایتون','توانایی نوشتن کدهای بهینه و حرفه‌ای','اجرای پروژه‌های پیشرفته و کاربردی','مشارکت فعال و کمک به دیگران در کلاس','تفکر تحلیلی قوی و توانایی حل مسائل پیچیده'].join('\n'),
+    gaps:['یادگیری الگوریتم‌های پیشرفته‌تر','تمرین بیشتر روی ساختار کد در پروژه‌های بزرگ‌تر','آشنایی با ابزارهای تست و دیباگ حرفه‌ای'].join('\n') },
+  B:{ notes:'عملکرد شما در این دوره خوب بوده است. با تمرین منظم‌تر می‌توانید به سطح عالی برسید.',
+    features:['درک خوب مفاهیم اصلی پایتون','توانایی حل تمرین‌های متوسط تا پیشرفته','مشارکت مناسب در فعالیت‌های کلاسی','پیشرفت پیوسته در طول دوره'].join('\n'),
+    gaps:['تمرین بیشتر روی مسائل پیچیده‌تر','تقویت سرعت و دقت در نوشتن کد','مشارکت فعال‌تر در بحث‌های کلاسی','مرور مفاهیمی که نیاز به تثبیت دارند'].join('\n') },
+  C:{ notes:'عملکرد شما در این دوره نیاز به تلاش و تمرین بیشتری دارد. پیشنهاد می‌شود جلسات تمرین اضافه برنامه‌ریزی شود.',
+    features:['آشنایی اولیه با مفاهیم پایتون','تلاش برای حل تمرین‌های ساده','حضور منظم در کلاس'].join('\n'),
+    gaps:['نیاز به مرور و تثبیت مفاهیم پایه','تمرین بیشتر برای حل مسئله','افزایش مشارکت در کلاس','نیاز به زمان تمرین بیشتر در خانه'].join('\n') }
+};
+let LEVEL_DEFAULTS = JSON.parse(JSON.stringify(BASE_DEFAULTS));
+let curLevel = 'A';
+let settingsTab = 'A';
+let students = [];
+let curStudentIdx = -1;
+
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || v; }
+
+function toJalali(gy, gm, gd){
+  const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let jy = (gy<=1600)?0:979;
+  gy -= (gy<=1600)?621:1600;
+  const gy2 = (gm>2)?(gy+1):gy;
+  let days = (365*gy) + (Math.floor((gy2+3)/4)) - (Math.floor((gy2+99)/100)) + (Math.floor((gy2+399)/400)) - 80 + gd + g_d_m[gm-1];
+  jy += 33*Math.floor(days/12053);
+  days %= 12053;
+  jy += 4*Math.floor(days/1461);
+  days %= 1461;
+  if(days > 365){ jy += Math.floor((days-1)/365); days = (days-1)%365; }
+  let jm, jd;
+  if(days < 186){ jm = 1 + Math.floor(days/31); jd = 1 + (days%31); }
+  else { jm = 7 + Math.floor((days-186)/30); jd = 1 + ((days-186)%30); }
+  return [jy, jm, jd];
+}
+const FA_DIGITS = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+function faNum(n){ return String(n).replace(/[0-9]/g, d=>FA_DIGITS[d]); }
+function todayJalali(){
+  const now = new Date();
+  const [jy,jm,jd] = toJalali(now.getFullYear(), now.getMonth()+1, now.getDate());
+  return faNum(jy)+'/'+faNum(String(jm).padStart(2,'0'))+'/'+faNum(String(jd).padStart(2,'0'));
+}
+
+function buildCardHTML(rec){
+  const lvl = LVL_INFO[rec.level] || LVL_INFO.A;
+  const vals = {};
+  Object.keys(SK_META).forEach(k=>{ vals[k] = LVL_MAP[rec.skills[k]] || 2; });
+  const total = Object.values(vals).reduce((a,b)=>a+b,0);
+  const R=40, CIRC=2*Math.PI*R;
+  let angleAcc = 0; let donutSegs=''; let legend=''; let bars='';
+  Object.keys(SK_META).forEach(key=>{
+    const meta = SK_META[key]; const v = vals[key]; const pct = (v/total)*100;
+    const color = css(meta.color);
+    const segLen = (pct/100)*CIRC;
+    const offset = (angleAcc/100)*CIRC;
+    donutSegs += `<circle cx="50" cy="50" r="${R}" fill="none" stroke="${color}" stroke-width="16" stroke-dasharray="${segLen.toFixed(2)} ${CIRC.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"/>`;
+    angleAcc += pct;
+    legend += `<div class="li"><span class="dot" style="background:${color}"></span>${meta.label}</div>`;
+    const barPct = (v/4)*100;
+    const labelText = Object.keys(LVL_MAP).find(k=>LVL_MAP[k]===v);
+    bars += `<div class="brow"><div class="blabel"><span>${meta.label}</span><span>${labelText}</span></div><div class="btrack"><div class="bfill" style="width:${barPct}%;background:${color}"></div></div></div>`;
+  });
+  const donutSvg = `<svg viewBox="0 0 100 100"><g transform="rotate(-90 50 50)">${donutSegs}</g></svg>`;
+  const featHtml = (rec.features||'').split('\n').filter(x=>x.trim()).map(x=>`<li>${x.trim()}</li>`).join('');
+  const gapHtml = (rec.gaps||'').split('\n').filter(x=>x.trim()).map(x=>`<li>${x.trim()}</li>`).join('');
+
+  const raw = String(rec.progress||'').split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+  const W=700,H=130,padL=40,padR=20,padT=10,padB=20;
+  const n = raw.length || 1;
+  const stepX = (W-padL-padR)/Math.max(n-1,1);
+  const yFor = v => H-padB-((v-1)/3)*(H-padT-padB);
+  const labels = ['ضعیف','متوسط','خوب','عالی'];
+  let svgHtml = '';
+  for(let i=0;i<4;i++){ const y = yFor(i+1);
+    svgHtml += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#eee" stroke-width="1"/>`;
+    svgHtml += `<text x="2" y="${y+3}" font-size="9" fill="#888">${labels[i]}</text>`; }
+  svgHtml += `<polyline points="${raw.map((v,i)=>(padL+i*stepX)+','+yFor(v)).join(' ')}" fill="none" stroke="${lvl.color}" stroke-width="2.5"/>`;
+  raw.forEach((v,i)=>{ const x = padL+i*stepX, y = yFor(v);
+    svgHtml += `<circle cx="${x}" cy="${y}" r="4" fill="${lvl.color}"/>`;
+    svgHtml += `<text x="${x}" y="${H-4}" font-size="9" fill="#888" text-anchor="middle">جلسه ${i+1}</text>`; });
+
+  const ribbonSvg = `<svg class="ribbon" viewBox="0 0 50 50" preserveAspectRatio="none"><defs><linearGradient id="rg${rec.name?rec.name.length:0}${rec.level}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${css('--gold-2')}"/><stop offset="1" stop-color="${css('--gold')}"/></linearGradient></defs><polygon points="0,0 50,0 50,50" fill="url(#rg${rec.name?rec.name.length:0}${rec.level})"/></svg>`;
+
+  return `
+  ${ribbonSvg}
+  <div class="head">
+    <div><h1>گزارش عملکرد</h1><div class="sub">${rec.course||''}</div><div class="inst">${rec.inst||''}</div></div>
+    <div class="badge"><div class="shield" style="background:${lvl.color}">${lvl.name}</div><div class="lvl" style="background:${lvl.color}">سطح ${lvl.name}</div></div>
+  </div>
+  <div class="infobar">
+    <div class="it"><span>نام دانشجو:</span><b>${rec.name||'................'}</b></div>
+    <div class="it"><span>مدرس:</span><b>${rec.teacher||''}</b></div>
+    <div class="it"><span>تاریخ گزارش:</span><b>${rec.date||''}</b></div>
+  </div>
+  <div class="grid2">
+    <div class="box"><h3>عملکرد کلی</h3>
+      <div class="donutwrap">
+        <div class="donut">${donutSvg}<div class="inner"><span style="font-size:9px">سطح</span><b>${lvl.name}</b><span style="color:${lvl.color};font-size:11px">${'★'.repeat(lvl.stars)}${'☆'.repeat(5-lvl.stars)}</span></div></div>
+        <div class="legend">${legend}</div>
+      </div>
+    </div>
+    <div class="box"><h3>ویژگی‌های سطح ${lvl.name}</h3><ul class="featlist">${featHtml}</ul></div>
+  </div>
+  <div class="grid2">
+    <div class="box"><h3>مهارت‌های ارزیابی‌شده</h3><div class="bars">${bars}</div></div>
+    <div class="box"><h3>بخش‌هایی که نیاز به کار بیشتری دارند</h3><ul class="gaplist">${gapHtml}</ul></div>
+  </div>
+  <div class="box" style="margin-bottom:10px;"><h3>روند پیشرفت در طول دوره</h3><div class="progresswrap"><svg viewBox="0 0 700 130">${svgHtml}</svg></div></div>
+  <div class="notesbox"><b>توضیحات مدرس:</b><div style="margin-top:5px;">${rec.notes||''}</div></div>
+  <div class="footer">
+    <div class="footline1"><span>${rec.inst||''}</span><span>مدرس دوره: ${rec.teacher||''}</span></div>
+    <div class="footline2"><span>📍 شعبه اصلی: ${rec.address||''}</span><span>☎ ${rec.phone||''}</span><span>★★ با مدیریت ${rec.manager||''} ★★</span></div>
+  </div>`;
+}
+
+function recordFromForm(){
+  const skills = {};
+  document.querySelectorAll('[data-sk]').forEach(s=>{ skills[s.dataset.sk] = s.value; });
+  return {
+    name: document.getElementById('f_name').value.trim(),
+    course: document.getElementById('f_course').value,
+    teacher: document.getElementById('f_teacher').value,
+    inst: document.getElementById('f_inst').value,
+    phone: document.getElementById('f_phone').value,
+    manager: document.getElementById('f_manager').value,
+    address: document.getElementById('f_address').value,
+    date: document.getElementById('f_date').value,
+    level: curLevel,
+    skills, progress: document.getElementById('f_progress').value,
+    features: document.getElementById('f_features').value,
+    gaps: document.getElementById('f_gaps').value,
+    notes: document.getElementById('f_notes').value
+  };
+}
+function render(){ document.getElementById('card').innerHTML = buildCardHTML(recordFromForm()); }
+
+function applyLevelDefaultsToForm(l){
+  const d = LEVEL_DEFAULTS[l];
+  document.getElementById('f_notes').value = d.notes;
+  document.getElementById('f_features').value = d.features;
+  document.getElementById('f_gaps').value = d.gaps;
+}
+function loadRecordIntoForm(rec){
+  document.getElementById('f_name').value = rec.name||'';
+  document.getElementById('f_course').value = rec.course||'';
+  document.getElementById('f_teacher').value = rec.teacher||'';
+  document.getElementById('f_inst').value = rec.inst||'';
+  document.getElementById('f_phone').value = rec.phone||document.getElementById('f_phone').value;
+  document.getElementById('f_manager').value = rec.manager||document.getElementById('f_manager').value;
+  document.getElementById('f_address').value = rec.address||document.getElementById('f_address').value;
+  document.getElementById('f_date').value = rec.date||'';
+  curLevel = rec.level||'A';
+  document.querySelectorAll('.levelbtns button').forEach(b=>b.classList.toggle('active', b.dataset.l===curLevel));
+  document.querySelectorAll('[data-sk]').forEach(s=>{ if(rec.skills && rec.skills[s.dataset.sk]) s.value = rec.skills[s.dataset.sk]; });
+  document.getElementById('f_progress').value = rec.progress||'';
+  document.getElementById('f_features').value = rec.features || LEVEL_DEFAULTS[curLevel].features;
+  document.getElementById('f_gaps').value = rec.gaps || LEVEL_DEFAULTS[curLevel].gaps;
+  document.getElementById('f_notes').value = rec.notes || LEVEL_DEFAULTS[curLevel].notes;
+  render();
+}
+
+document.querySelectorAll('.levelbtns button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    curLevel = b.dataset.l;
+    document.querySelectorAll('.levelbtns button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    applyLevelDefaultsToForm(curLevel);
+    render();
+  });
+});
+document.getElementById('panel').addEventListener('input', render);
+document.getElementById('todayBtn').addEventListener('click', ()=>{ document.getElementById('f_date').value = todayJalali(); render(); });
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  try{
+    localStorage.setItem('karnameh-draft', JSON.stringify(recordFromForm()));
+    saveBtn.textContent = 'ذخیره شد ✓'; setTimeout(()=>saveBtn.textContent='ذخیره پیش‌نویس',1200);
+  }catch(e){}
+});
+
+// ---- PDF / ZIP export ----
+function triggerDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+async function captureCardCanvas(rec){
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-9999px;top:0;';
+  holder.innerHTML = `<div class="card">${buildCardHTML(rec)}</div>`;
+  document.body.appendChild(holder);
+  try{ await document.fonts.load('700 26px Vazirmatn'); await document.fonts.load('400 14px Vazirmatn'); await document.fonts.ready; }catch(e){}
+  await new Promise(r=>setTimeout(r,200));
+  const canvas = await html2canvas(holder.firstChild, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
+  document.body.removeChild(holder);
+  return canvas;
+}
+async function canvasToPdfBlob(canvas){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  const imgData = canvas.toDataURL('image/jpeg', 0.93);
+  pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+  return pdf.output('blob');
+}
+function safeFilename(s){ return (s||'دانشجو').replace(/[\\/:*?"<>|]/g,'_'); }
+
+document.getElementById('pdfBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('pdfBtn');
+  const orig = btn.textContent; btn.textContent = 'در حال ساخت...'; btn.disabled = true;
+  try{
+    const rec = recordFromForm();
+    const canvas = await captureCardCanvas(rec);
+    const blob = await canvasToPdfBlob(canvas);
+    triggerDownload(blob, `کارنامه-${safeFilename(rec.name)}.pdf`);
+  }catch(e){ alert('خطا در ساخت PDF.'); }
+  btn.textContent = orig; btn.disabled = false;
+});
+
+// ---- Excel import ----
+const HEADER_MAP = {
+  'نام دانشجو':'name','نام':'name',
+  'نام دوره':'course','دوره':'course',
+  'مدرس':'teacher','نام مدرس':'teacher',
+  'مرکز آموزشی':'inst','نام مرکز':'inst','نام مرکز آموزشی':'inst',
+  'تلفن':'phone','شماره تماس':'phone','تلفن آموزشگاه':'phone',
+  'مدیریت':'manager','مدیر':'manager',
+  'آدرس':'address','آدرس شعبه':'address',
+  'تاریخ':'date','تاریخ گزارش':'date',
+  'سطح':'level',
+  'درک مفاهیم':'mafahim','تمرین و حل مسئله':'tamrin','تمرین':'tamrin',
+  'پروژه و عملی':'proje','پروژه':'proje','مشارکت کلاسی':'mosharekat','مشارکت':'mosharekat',
+  'پیشرفت کلی':'pishraft','روند پیشرفت':'progress',
+  'توضیحات':'notes','توضیحات مدرس':'notes',
+  'ویژگی ها':'features','ویژگی‌ها':'features','ویژگی های سطح':'features',
+  'نیازمند کار':'gaps','بخش های نیازمند کار':'gaps','بخش‌های نیازمند کار':'gaps'
+};
+const SKILL_KEYS = ['mafahim','tamrin','proje','mosharekat','pishraft'];
+function normalizeLevel(v){ v=String(v||'A').trim().toUpperCase(); return ['A','B','C'].includes(v)?v:'A'; }
+function normalizeSkill(v){ v=String(v||'').trim(); return LVL_MAP[v]!==undefined ? v : 'متوسط'; }
+
+document.getElementById('excelFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      students = rows.map(row=>{
+        const rec = {skills:{}};
+        Object.keys(row).forEach(h=>{
+          const key = HEADER_MAP[h.trim()];
+          if(!key) return;
+          if(SKILL_KEYS.includes(key)) rec.skills[key] = normalizeSkill(row[h]);
+          else if(key==='level') rec.level = normalizeLevel(row[h]);
+          else rec[key] = String(row[h]);
+        });
+        rec.level = rec.level || 'A';
+        SKILL_KEYS.forEach(k=>{ if(!rec.skills[k]) rec.skills[k] = 'متوسط'; });
+        if(!rec.features) rec.features = LEVEL_DEFAULTS[rec.level].features;
+        if(!rec.gaps) rec.gaps = LEVEL_DEFAULTS[rec.level].gaps;
+        if(!rec.notes) rec.notes = LEVEL_DEFAULTS[rec.level].notes;
+        if(!rec.progress) rec.progress = '2,2,3,3';
+        if(!rec.inst) rec.inst = document.getElementById('f_inst').value;
+        if(!rec.phone) rec.phone = document.getElementById('f_phone').value;
+        if(!rec.manager) rec.manager = document.getElementById('f_manager').value;
+        if(!rec.address) rec.address = document.getElementById('f_address').value;
+        if(!rec.teacher) rec.teacher = document.getElementById('f_teacher').value;
+        if(!rec.course) rec.course = document.getElementById('f_course').value;
+        return rec;
+      }).filter(r=>r.name);
+      renderStudentList();
+      if(students.length){ curStudentIdx = 0; loadRecordIntoForm(students[0]); }
+    }catch(err){ alert('خطا در خواندن فایل اکسل. لطفاً از قالب نمونه استفاده کنید.'); }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function renderStudentList(){
+  const wrap = document.getElementById('studWrap');
+  const list = document.getElementById('studList');
+  if(!students.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  list.innerHTML = students.map((s,i)=>`<div class="srow ${i===curStudentIdx?'active':''}" data-i="${i}"><span class="sname">${s.name}</span><button class="sdl" data-dl="${i}" type="button">⬇</button></div>`).join('');
+  list.querySelectorAll('.srow').forEach(row=>{
+    row.addEventListener('click', (ev)=>{
+      if(ev.target.classList.contains('sdl')) return;
+      curStudentIdx = parseInt(row.dataset.i); loadRecordIntoForm(students[curStudentIdx]); renderStudentList();
+    });
+  });
+  list.querySelectorAll('.sdl').forEach(btn=>{
+    btn.addEventListener('click', async (ev)=>{
+      ev.stopPropagation();
+      const i = parseInt(btn.dataset.dl);
+      const rec = i===curStudentIdx ? recordFromForm() : students[i];
+      btn.textContent='...';
+      try{ const canvas = await captureCardCanvas(rec); const blob = await canvasToPdfBlob(canvas); triggerDownload(blob, `کارنامه-${safeFilename(rec.name)}.pdf`); }catch(e){ alert('خطا در ساخت PDF.'); }
+      btn.textContent='⬇';
+    });
+  });
+}
+document.getElementById('prevStud').addEventListener('click', ()=>{
+  if(!students.length) return;
+  students[curStudentIdx] = recordFromForm();
+  curStudentIdx = (curStudentIdx-1+students.length)%students.length;
+  loadRecordIntoForm(students[curStudentIdx]); renderStudentList();
+});
+document.getElementById('nextStud').addEventListener('click', ()=>{
+  if(!students.length) return;
+  students[curStudentIdx] = recordFromForm();
+  curStudentIdx = (curStudentIdx+1)%students.length;
+  loadRecordIntoForm(students[curStudentIdx]); renderStudentList();
+});
+document.getElementById('batchPrint').addEventListener('click', ()=>{
+  if(!students.length) return;
+  if(curStudentIdx>=0) students[curStudentIdx] = recordFromForm();
+  const container = document.getElementById('batchContainer');
+  container.innerHTML = students.map(s=>`<div class="printpage"><div class="card">${buildCardHTML(s)}</div></div>`).join('');
+  document.body.classList.add('batch-print');
+  window.print();
+});
+window.addEventListener('afterprint', ()=>{ document.body.classList.remove('batch-print'); });
+
+document.getElementById('zipBtn').addEventListener('click', async ()=>{
+  if(!students.length) return;
+  if(curStudentIdx>=0) students[curStudentIdx] = recordFromForm();
+  const btn = document.getElementById('zipBtn');
+  const orig = btn.textContent; btn.disabled = true;
+  try{
+    const zip = new JSZip();
+    for(let i=0;i<students.length;i++){
+      btn.textContent = `${i+1}/${students.length}`;
+      const canvas = await captureCardCanvas(students[i]);
+      const blob = await canvasToPdfBlob(canvas);
+      zip.file(`${safeFilename(students[i].name)}.pdf`, blob);
+    }
+    btn.textContent = 'فشرده‌سازی...';
+    const content = await zip.generateAsync({type:'blob'});
+    triggerDownload(content, 'کارنامه‌ها.zip');
+  }catch(e){ alert('خطا در ساخت فایل ZIP.'); }
+  btn.textContent = orig; btn.disabled = false;
+});
+
+document.getElementById('tmplBtn').addEventListener('click', ()=>{
+  const headers = ['نام دانشجو','نام دوره','مدرس','مرکز آموزشی','تاریخ','سطح','درک مفاهیم','تمرین و حل مسئله','پروژه و عملی','مشارکت کلاسی','پیشرفت کلی','روند پیشرفت','توضیحات'];
+  const example = ['علی محمدی','کلاس‌های برنامه‌نویسی پایتون','رضا ایوبی','مرکز آموزشی خوارزمی','۱۴۰۴/۰۷/۲۸','A','عالی','عالی','خوب','خوب','عالی','2,2,3,3,3,4,4,4','عملکرد بسیار خوبی داشته است.'];
+  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'کارنامه‌ها');
+  XLSX.writeFile(wb, 'قالب-کارنامه.xlsx');
+});
+
+// ---- settings drawer ----
+const overlay = document.getElementById('overlay');
+document.getElementById('openSettings').addEventListener('click', ()=>{
+  settingsTab = curLevel;
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.t===settingsTab));
+  loadSettingsTab(); overlay.classList.add('open');
+});
+document.getElementById('closeSettings').addEventListener('click', ()=> overlay.classList.remove('open'));
+document.querySelectorAll('.tabs button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    saveCurrentTabToMemory();
+    settingsTab = b.dataset.t;
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); loadSettingsTab();
+  });
+});
+function loadSettingsTab(){ const d = LEVEL_DEFAULTS[settingsTab]; document.getElementById('s_notes').value=d.notes; document.getElementById('s_features').value=d.features; document.getElementById('s_gaps').value=d.gaps; }
+function saveCurrentTabToMemory(){ LEVEL_DEFAULTS[settingsTab] = { notes:document.getElementById('s_notes').value, features:document.getElementById('s_features').value, gaps:document.getElementById('s_gaps').value }; }
+document.getElementById('saveSettings').addEventListener('click', ()=>{
+  saveCurrentTabToMemory();
+  try{ localStorage.setItem('karnameh-level-defaults', JSON.stringify(LEVEL_DEFAULTS)); }catch(e){}
+  applyLevelDefaultsToForm(curLevel); render(); overlay.classList.remove('open');
+});
+
+(function init(){
+  try{ const savedDefaults = localStorage.getItem('karnameh-level-defaults'); if(savedDefaults) LEVEL_DEFAULTS = JSON.parse(savedDefaults); }catch(e){}
+  applyLevelDefaultsToForm(curLevel);
+  try{
+    const raw = localStorage.getItem('karnameh-draft');
+    if(raw) loadRecordIntoForm(JSON.parse(raw)); else render();
+  }catch(e){ render(); }
+})();
+</script>
+</body>
+</html>
